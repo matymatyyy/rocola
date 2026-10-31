@@ -62,12 +62,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.maty.rocola.data.Album
 import com.maty.rocola.data.LibraryData
+import com.maty.rocola.data.LibraryIndex
 import com.maty.rocola.data.Playlist
 import com.maty.rocola.data.SongSort
 import com.maty.rocola.ui.AppController
 import com.maty.rocola.ui.PlayerUiState
 import com.maty.rocola.ui.SongMenuRequest
 import com.maty.rocola.ui.components.ArtworkImage
+import com.maty.rocola.ui.components.FastScroller
 import com.maty.rocola.ui.components.CircleArtRow
 import com.maty.rocola.ui.components.EmptyMessage
 import com.maty.rocola.ui.components.IconTileRow
@@ -171,7 +173,9 @@ private fun TabStrip(selected: Int, onSelect: (Int) -> Unit) {
 private fun SongsTab(app: AppController, library: LibraryData, player: PlayerUiState, sort: SongSort, bottomPadding: Dp) {
     val songs = library.songs
     var sortOpen by remember { mutableStateOf(false) }
-    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = bottomPadding)) {
+    val listState = rememberLazyListState()
+    Box(Modifier.fillMaxSize()) {
+    LazyColumn(Modifier.fillMaxSize(), state = listState, contentPadding = PaddingValues(bottom = bottomPadding)) {
         item(key = "header") {
             Row(
                 Modifier
@@ -228,6 +232,23 @@ private fun SongsTab(app: AppController, library: LibraryData, player: PlayerUiS
                 )
             }
         }
+    }
+    FastScroller(
+        listState = listState,
+        itemCount = songs.size,
+        firstItemOffset = 1,
+        labelFor = { index ->
+            val song = songs.getOrNull(index)
+            val source = when (sort) {
+                SongSort.TITLE -> song?.title
+                SongSort.ARTIST -> song?.artist
+                SongSort.ALBUM -> song?.album
+                else -> null
+            }
+            source?.let { LibraryIndex.normalize(it).firstOrNull { c -> c.isLetterOrDigit() }?.uppercaseChar()?.toString() ?: "#" }
+        },
+        modifier = Modifier.align(Alignment.TopEnd).padding(top = 64.dp, bottom = bottomPadding),
+    )
     }
 }
 
