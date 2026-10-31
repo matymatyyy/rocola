@@ -376,9 +376,8 @@ class PlaybackService : MediaSessionService() {
                 }
                 CMD_SHUFFLE_FROM_CURRENT -> shuffleFromCurrent()
                 CMD_PLACE_NEXT -> {
-                    val items = args.getLongArray(ARG_IDS)
-                        ?.mapNotNull { id -> rocola.repository.song(id)?.toMediaItem() }
-                        .orEmpty()
+                    val ids: List<Long> = args.getLongArray(ARG_IDS)?.toList().orEmpty()
+                    val items: List<MediaItem> = ids.mapNotNull { id -> rocola.repository.song(id)?.toMediaItem() }
                     if (items.isNotEmpty()) {
                         val at = (player.currentMediaItemIndex + 1).coerceAtMost(player.mediaItemCount)
                         player.addMediaItems(at, items)
