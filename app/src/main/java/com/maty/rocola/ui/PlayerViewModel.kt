@@ -35,6 +35,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.guava.await
 import kotlinx.coroutines.launch
@@ -277,7 +278,11 @@ class PlayerViewModel(private val app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             if (!repository.hasPermission()) return@launch
             withTimeoutOrNull(10_000) { connected.await() } ?: return@launch
-            val songs = withTimeoutOrNull(10_000) { repository.awaitSongs() } ?: return@launch
+            // Recién encendido, Android puede tardar unos segundos en terminar de indexar la música.
+            repository.start()
+            val songs = withTimeoutOrNull(20_000) {
+                repository.songs.filterNotNull().first { it.isNotEmpty() }
+            } ?: return@launch
             val hideShort = app.rocola.userStore.hideShort.value
             val pool = songs.filter { !hideShort || it.durationMs >= LibraryIndex.SHORT_AUDIO_MS }.ifEmpty { songs }
             play(pool, shuffle = true, label = "Toda tu música")

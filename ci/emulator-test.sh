@@ -79,12 +79,15 @@ for f in "$FIXTURES"/*.mp3; do
 done
 EXPECTED=$(ls "$FIXTURES"/*.mp3 | wc -l)
 COUNT=0
-for _ in $(seq 1 30); do
-  COUNT=$(adb shell content query --uri content://media/external/audio/media --projection _id 2>/dev/null | grep -c "Row:")
+# Esperamos a que el escáner termine de leer las etiquetas (duración > 0), no solo a que existan las filas.
+for _ in $(seq 1 90); do
+  COUNT=$(adb shell "content query --uri content://media/external/audio/media --projection title:duration --where 'duration>0 AND is_music=1'" 2>/dev/null | grep -c "Row:")
   [ "$COUNT" -ge "$EXPECTED" ] && break
   sleep 2
 done
-if [ "$COUNT" -ge "$EXPECTED" ]; then pass "MediaStore indexó $COUNT archivos"; else fail "MediaStore indexó $COUNT de $EXPECTED archivos"; fi
+adb shell "content query --uri content://media/external/audio/media --projection title:artist:album:duration:is_music" > "$OUT/mediastore.txt" 2>&1
+if [ "$COUNT" -ge "$EXPECTED" ]; then pass "MediaStore indexó $COUNT archivos con sus etiquetas"; else fail "MediaStore indexó $COUNT de $EXPECTED archivos"; fi
+sleep 3
 
 echo "== Interfaz"
 adb shell am start -W -n "$PKG/.MainActivity" > /dev/null
@@ -97,15 +100,26 @@ shot 02-reproductor 1
 
 back() { adb shell input keyevent KEYCODE_BACK; sleep 1; }
 on_screen() { [ -n "$(ui_find "$@")" ]; }
+ensure_front() {
+  if ! adb shell dumpsys activity activities | grep -E "topResumedActivity|mResumedActivity" | grep -q "$PKG"; then
+    note "La app no estaba al frente; la vuelvo a abrir"
+    adb shell am start -W -n "$PKG/.MainActivity" > /dev/null
+    sleep 2
+  fi
+}
 
-if tap "A continuación"; then shot 03-cola 1; back; fi
-back # minimiza el reproductor
+if on_screen "Minimizar"; then
+  if tap "A continuación"; then shot 03-cola 1; back; fi
+  back # minimiza el reproductor
+fi
+ensure_front
 shot 04-biblioteca-mini 1
 
 if tap "Álbumes"; then
   shot 05-albumes 1
   if tap "Luces de Avenida"; then shot 06-album 1; back; fi
 fi
+ensure_front
 tap "Artistas" && shot 07-artistas 1
 tap "Carpetas" && shot 08-carpetas 1
 tap "Listas" && shot 09-listas 1
@@ -116,6 +130,7 @@ if tap "Buscar"; then
   back
   on_screen "Ajustes" || back
 fi
+ensure_front
 if tap "Ajustes"; then
   shot 11-ajustes 1
   if tap "Ecualizador"; then shot 12-ecualizador 1; back; fi
