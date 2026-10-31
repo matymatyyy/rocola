@@ -171,16 +171,26 @@ fun NowPlayingScreen(
                     .padding(horizontal = 24.dp),
             ) {
                 TopRow(state, current, actions)
-                Spacer(Modifier.weight(0.5f))
-                ArtStage(
-                    current = current,
-                    hasNext = state.hasNext,
-                    hasPrevious = state.hasPrevious,
-                    onSwipeNext = actions.skipNextItem,
-                    onSwipePrevious = actions.skipPreviousItem,
-                    artModifier = Modifier.sharedElement(rememberSharedContentState("player-art"), visibilityScope),
-                )
-                Spacer(Modifier.height(28.dp))
+                // La tapa ocupa todo el ancho si hay lugar; en pantallas bajas se achica.
+                BoxWithConstraints(
+                    Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .padding(vertical = 12.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    val side = if (maxWidth < maxHeight) maxWidth else maxHeight
+                    ArtStage(
+                        current = current,
+                        hasNext = state.hasNext,
+                        hasPrevious = state.hasPrevious,
+                        onSwipeNext = actions.skipNextItem,
+                        onSwipePrevious = actions.skipPreviousItem,
+                        artModifier = Modifier.sharedElement(rememberSharedContentState("player-art"), visibilityScope),
+                        modifier = Modifier.size(side),
+                    )
+                }
+                Spacer(Modifier.height(16.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
                         Text(
@@ -210,7 +220,7 @@ fun NowPlayingScreen(
                 }
                 Spacer(Modifier.height(18.dp))
                 PositionDial(position, state.durationMs, accent, actions.seekTo)
-                Spacer(Modifier.weight(0.35f))
+                Spacer(Modifier.height(18.dp))
                 Transport(state, accent, onAccent, actions)
                 Spacer(Modifier.height(22.dp))
                 BottomRow(queue, state, sleepTimer, actions)
@@ -272,6 +282,7 @@ private fun ArtStage(
     onSwipeNext: () -> Unit,
     onSwipePrevious: () -> Unit,
     artModifier: Modifier,
+    modifier: Modifier = Modifier,
 ) {
     val scope = rememberCoroutineScope()
     val offset = remember { Animatable(0f) }
@@ -281,7 +292,7 @@ private fun ArtStage(
         pop.snapTo(0.93f)
         pop.animateTo(1f, spring(dampingRatio = 0.55f, stiffness = 320f))
     }
-    BoxWithConstraints(Modifier.fillMaxWidth().aspectRatio(1f), contentAlignment = Alignment.Center) {
+    BoxWithConstraints(modifier, contentAlignment = Alignment.Center) {
         val widthPx = constraints.maxWidth.toFloat().coerceAtLeast(1f)
         Box(
             artModifier
