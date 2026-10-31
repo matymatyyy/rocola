@@ -91,6 +91,7 @@ import com.maty.rocola.ui.PlayerUiState
 import com.maty.rocola.ui.QueueState
 import com.maty.rocola.ui.components.ArtworkImage
 import com.maty.rocola.ui.components.DialSeekBar
+import com.maty.rocola.ui.components.LocalReduceMotion
 import com.maty.rocola.ui.components.formatDuration
 import com.maty.rocola.ui.theme.Rocola
 import com.maty.rocola.ui.theme.RocolaType
@@ -198,7 +199,8 @@ fun NowPlayingScreen(
                             style = RocolaType.display,
                             color = Rocola.Marfil,
                             maxLines = 1,
-                            modifier = Modifier.basicMarquee(iterations = Int.MAX_VALUE),
+                            overflow = if (LocalReduceMotion.current) TextOverflow.Ellipsis else TextOverflow.Clip,
+                            modifier = if (LocalReduceMotion.current) Modifier else Modifier.basicMarquee(iterations = Int.MAX_VALUE),
                         )
                         Spacer(Modifier.height(4.dp))
                         Text(

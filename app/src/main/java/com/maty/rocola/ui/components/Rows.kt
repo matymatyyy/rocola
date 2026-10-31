@@ -33,7 +33,11 @@ import androidx.compose.material.icons.rounded.Shuffle
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
+import android.provider.Settings
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -117,10 +121,21 @@ fun SongRow(
     }
 }
 
-/** Tres barritas que marcan lo que está sonando. Quietas cuando está en pausa. */
+/** true si el usuario desactivó las animaciones del sistema (accesibilidad). */
+val LocalReduceMotion = staticCompositionLocalOf { false }
+
+@Composable
+fun rememberReduceMotion(): Boolean {
+    val context = LocalContext.current
+    return remember {
+        Settings.Global.getFloat(context.contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) == 0f
+    }
+}
+
+/** Tres barritas que marcan lo que está sonando. Quietas en pausa o con las animaciones desactivadas. */
 @Composable
 fun PlayingBars(playing: Boolean, modifier: Modifier = Modifier, color: Color = Rocola.Ambar) {
-    if (playing) {
+    if (playing && !LocalReduceMotion.current) {
         val transition = rememberInfiniteTransition(label = "bars")
         val a = transition.animateFloat(0.25f, 1f, infiniteRepeatable(tween(520, easing = FastOutSlowInEasing), RepeatMode.Reverse), label = "a")
         val b = transition.animateFloat(0.25f, 1f, infiniteRepeatable(tween(430, easing = FastOutSlowInEasing), RepeatMode.Reverse, StartOffset(180)), label = "b")

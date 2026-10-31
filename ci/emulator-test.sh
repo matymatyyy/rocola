@@ -190,12 +190,15 @@ adb shell input keyevent KEYCODE_WAKEUP
 shot 13-pantalla-bloqueo 3
 adb shell locksettings clear --old 1234 > /dev/null 2>&1
 adb shell wm dismiss-keyguard
-adb shell input keyevent 82
+sleep 2
+adb shell input keyevent KEYCODE_HOME
 sleep 1
 adb shell cmd statusbar expand-notifications
-shot 14-notificacion 3
+sleep 2
+adb shell cmd statusbar expand-notifications
+shot 14-notificacion 2
 T1=$(current_title)
-if tap "Next" "Siguiente" "Skip to next"; then
+if tap "Next track" "Next" "Siguiente" "Skip to next"; then
   sleep 1
   T2=$(current_title)
   if [ "$T1" != "$T2" ]; then pass "El botón Siguiente de la notificación funciona"; else fail "El botón Siguiente de la notificación no cambió el tema"; fi

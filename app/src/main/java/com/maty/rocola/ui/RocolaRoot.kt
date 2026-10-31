@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
@@ -32,6 +33,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.maty.rocola.playback.SleepTimer
+import com.maty.rocola.ui.components.LocalReduceMotion
+import com.maty.rocola.ui.components.rememberReduceMotion
 import com.maty.rocola.ui.screens.AlbumScreen
 import com.maty.rocola.ui.screens.ArtistScreen
 import com.maty.rocola.ui.screens.EqualizerScreen
@@ -57,6 +60,13 @@ import com.maty.rocola.ui.theme.Rocola
 fun RocolaRoot(libraryVm: LibraryViewModel, playerVm: PlayerViewModel, nav: NavViewModel) {
     val context = LocalContext.current
     val app = remember(libraryVm, playerVm, nav) { AppController(libraryVm, playerVm, nav, context.applicationContext) }
+    CompositionLocalProvider(LocalReduceMotion provides rememberReduceMotion()) {
+        RocolaContent(app, libraryVm, playerVm, nav)
+    }
+}
+
+@Composable
+private fun RocolaContent(app: AppController, libraryVm: LibraryViewModel, playerVm: PlayerViewModel, nav: NavViewModel) {
 
     LifecycleStartEffect(Unit) {
         playerVm.setVisible(true)
