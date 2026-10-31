@@ -125,7 +125,7 @@ fun SettingsScreen(app: AppController, bottomPadding: Dp) {
                     "Algunos teléfonos (Xiaomi, Samsung, Huawei) cortan las apps en segundo plano. Tocá acá y elegí Permitir."
                 },
                 onClick = { askBatteryExemption(context) },
-                iconTint = if (batteryFree) Rocola.Marfil else Rocola.Ambar,
+                iconTint = if (batteryFree) Rocola.Arena else Rocola.Marfil,
             )
         }
 
