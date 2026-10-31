@@ -24,7 +24,7 @@ Con Android Studio, abrí la carpeta y tocá Build > Build APK(s). Por línea de
 # APK en app/build/outputs/apk/release/app-release.apk
 ```
 
-Cada push a `main` compila el APK en GitHub Actions y lo prueba en un emulador con Android 14. Ahí reproduce, apaga la pantalla, fuerza el modo Doze, espera 100 segundos y verifica que siga sonando, que avance de tema, que la notificación esté y que respondan los botones multimedia. El APK y las capturas quedan como artefactos de cada ejecución.
+Cada push a `main` compila el APK en GitHub Actions y lo prueba en un emulador con Android 14. Ahí reproduce, apaga la pantalla, fuerza el modo Doze, espera 100 segundos y verifica que siga sonando, que avance de tema, que la notificación y la pantalla de bloqueo muestren los controles, y que funcionen los botones de la notificación (pausa, siguiente, favorita) y los de auriculares. El APK, las capturas y el resultado de la prueba quedan en la versión **Compilación de prueba** del repo (Releases), que se actualiza con cada cambio.
 
 ## Firma
 
