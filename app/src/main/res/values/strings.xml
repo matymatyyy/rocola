@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Rocola</string>
+    <string name="playback_channel_name">Reproducción</string>
+    <string name="shortcut_shuffle_short">Mezclar todo</string>
+    <string name="shortcut_shuffle_long">Mezclar toda la música</string>
+</resources>
