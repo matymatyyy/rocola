@@ -28,8 +28,11 @@ current_title() { session | grep -m1 "metadata:" | sed 's/.*description=//'; }
 
 ui_find() {
   # Imprime "x y" del primer nodo cuyo texto o descripción coincide con alguno de los argumentos.
+  # Se borra el volcado anterior para no usar coordenadas viejas si el nuevo falla.
+  rm -f "$OUT/ui.xml"
+  adb shell rm -f /sdcard/rocola-ui.xml
   adb shell uiautomator dump /sdcard/rocola-ui.xml > /dev/null 2>&1
-  adb pull /sdcard/rocola-ui.xml "$OUT/ui.xml" > /dev/null 2>&1
+  adb pull /sdcard/rocola-ui.xml "$OUT/ui.xml" > /dev/null 2>&1 || return 0
   python3 - "$OUT/ui.xml" "$@" <<'PY'
 import re, sys, xml.etree.ElementTree as ET
 path, targets = sys.argv[1], sys.argv[2:]
@@ -213,18 +216,21 @@ adb shell cmd statusbar expand-notifications
 sleep 2
 adb shell cmd statusbar expand-notifications
 shot 14-notificacion 2
+# Botones del reproductor del panel de notificaciones, en las posiciones medidas en la
+# captura (Pixel 6 del emulador; el volcado de interfaz no responde con la barra animada).
+# Primero pausa, así ningún cambio de tema natural se confunde con el botón Siguiente.
+tap_xy() { adb shell input tap "$1" "$2"; sleep 2; }
+tap_xy 932 736
+if is_paused; then pass "El botón Pausa de la notificación funciona"; else fail "El botón Pausa de la notificación no pausó ($(pb_state | cut -c1-60))"; fi
 T1=$(current_title)
-if tap "Next track" "Next" "Siguiente" "Skip to next"; then
-  sleep 1
-  T2=$(current_title)
-  if [ "$T1" != "$T2" ]; then pass "El botón Siguiente de la notificación funciona"; else fail "El botón Siguiente de la notificación no cambió el tema"; fi
-fi
-if tap "Pause" "Pausar" "Pausa"; then
-  sleep 1
-  if is_paused; then pass "El botón Pausa de la notificación funciona"; else fail "El botón Pausa de la notificación no pausó"; fi
-  shot 15-notificacion-pausa 1
-  tap "Play" "Reproducir" > /dev/null
-fi
+tap_xy 848 902
+T2=$(current_title)
+if [ -n "$T2" ] && [ "$T1" != "$T2" ]; then pass "El botón Siguiente de la notificación funciona: $T2"; else fail "El botón Siguiente de la notificación no cambió el tema"; fi
+tap_xy 974 902
+if pb_state | grep -q "Quitar de favoritas"; then pass "El corazón de la notificación marca la canción como favorita"; else fail "El corazón de la notificación no la marcó como favorita"; fi
+shot 15-notificacion-favorita 1
+tap_xy 932 736
+if is_playing; then pass "El botón Reproducir de la notificación funciona"; else fail "El botón Reproducir de la notificación no reanudó"; fi
 adb shell cmd statusbar collapse
 
 echo "== Volver desde la notificación"
