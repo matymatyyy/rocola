@@ -86,9 +86,12 @@ jobs:
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 34
-          target: google_apis
+          target: default
           arch: x86_64
           profile: pixel_6
+          cores: 4
+          ram-size: 4096M
+          heap-size: 576M
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -no-boot-anim -camera-back none -camera-front none
           script: bash ci/emulator-test.sh dist/Rocola-1.0.apk fixtures ci-out
