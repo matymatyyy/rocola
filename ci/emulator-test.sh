@@ -95,27 +95,33 @@ sleep 5
 if is_playing; then pass "Arranca con \"Mezclar todo\": $(current_title)"; else fail "No arrancó la reproducción ($(pb_state))"; fi
 shot 02-reproductor 1
 
-tap "A continuación" && shot 03-cola 1
-adb shell input keyevent KEYCODE_BACK
-sleep 1
-adb shell input keyevent KEYCODE_BACK
+back() { adb shell input keyevent KEYCODE_BACK; sleep 1; }
+on_screen() { [ -n "$(ui_find "$@")" ]; }
+
+if tap "A continuación"; then shot 03-cola 1; back; fi
+back # minimiza el reproductor
 shot 04-biblioteca-mini 1
 
-tap "Álbumes" && shot 05-albumes 1
-tap "Luces de Avenida" && shot 06-album 1
-adb shell input keyevent KEYCODE_BACK
+if tap "Álbumes"; then
+  shot 05-albumes 1
+  if tap "Luces de Avenida"; then shot 06-album 1; back; fi
+fi
 tap "Artistas" && shot 07-artistas 1
 tap "Carpetas" && shot 08-carpetas 1
 tap "Listas" && shot 09-listas 1
 tap "Canciones" > /dev/null
-tap "Buscar" && adb shell input text "faro" && shot 10-busqueda 2
-adb shell input keyevent KEYCODE_BACK
-adb shell input keyevent KEYCODE_BACK
-sleep 1
-tap "Ajustes" && shot 11-ajustes 1
-tap "Ecualizador" && shot 12-ecualizador 1
-adb shell input keyevent KEYCODE_BACK
-adb shell input keyevent KEYCODE_BACK
+if tap "Buscar"; then
+  adb shell input text "faro"
+  shot 10-busqueda 2
+  back
+  on_screen "Ajustes" || back
+fi
+if tap "Ajustes"; then
+  shot 11-ajustes 1
+  if tap "Ecualizador"; then shot 12-ecualizador 1; back; fi
+  back
+fi
+adb shell am start -W -n "$PKG/.MainActivity" > /dev/null
 
 echo "== Segundo plano con la pantalla apagada"
 is_playing || adb shell input keyevent KEYCODE_MEDIA_PLAY
