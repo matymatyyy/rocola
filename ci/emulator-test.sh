@@ -46,6 +46,18 @@ for target in targets:
 PY
 }
 
+dismiss_anr() {
+  # El emulador de la CI a veces muestra "X isn't responding" de apps del sistema; lo cerramos con "Wait".
+  local wait_btn
+  wait_btn=$(ui_find "Wait" "Esperar")
+  if [ -n "$wait_btn" ]; then
+    # shellcheck disable=SC2086
+    adb shell input tap $wait_btn
+    note "Cerré un aviso de app del sistema que no respondía"
+    sleep 1
+  fi
+}
+
 tap() {
   local coords=""
   for _ in 1 2 3 4; do
@@ -56,6 +68,7 @@ tap() {
       sleep 1.5
       return 0
     fi
+    dismiss_anr
     sleep 1
   done
   note "No encontré en pantalla: $*"
@@ -91,11 +104,14 @@ sleep 3
 
 echo "== Interfaz"
 adb shell am start -W -n "$PKG/.MainActivity" > /dev/null
-shot 01-biblioteca 4
+sleep 3
+dismiss_anr
+shot 01-biblioteca 1
 
 adb shell am start -W -a com.maty.rocola.action.SHUFFLE_ALL -n "$PKG/.MainActivity" > /dev/null
 sleep 5
 if is_playing; then pass "Arranca con \"Mezclar todo\": $(current_title)"; else fail "No arrancó la reproducción ($(pb_state))"; fi
+dismiss_anr
 shot 02-reproductor 1
 
 back() { adb shell input keyevent KEYCODE_BACK; sleep 1; }
