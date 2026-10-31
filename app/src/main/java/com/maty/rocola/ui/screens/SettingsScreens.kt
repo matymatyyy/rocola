@@ -122,7 +122,7 @@ fun SettingsScreen(app: AppController, bottomPadding: Dp) {
                 subtitle = if (batteryFree) {
                     "Listo: el sistema no va a cortar la música con la pantalla apagada."
                 } else {
-                    "Algunos teléfonos (Xiaomi, Samsung, Huawei) cortan las apps en segundo plano. Tocá acá y elegí Permitir."
+                    "Si la música se corta con la pantalla apagada, tocá acá y elegí Permitir."
                 },
                 onClick = { askBatteryExemption(context) },
                 iconTint = if (batteryFree) Rocola.Arena else Rocola.Marfil,

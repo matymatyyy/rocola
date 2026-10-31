@@ -143,6 +143,8 @@ is_playing || adb shell input keyevent KEYCODE_MEDIA_PLAY
 adb shell input keyevent KEYCODE_HOME
 sleep 2
 PID_BEFORE=$(adb shell pidof "$PKG" | tr -d '\r')
+# PIN para que al prender la pantalla aparezca la pantalla de bloqueo con los controles.
+adb shell locksettings set-pin 1234 > /dev/null 2>&1 && note "Bloqueo con PIN activado para la prueba"
 adb shell dumpsys battery unplug
 adb shell input keyevent KEYCODE_SLEEP
 sleep 3
@@ -186,7 +188,9 @@ adb shell dumpsys deviceidle unforce > /dev/null
 adb shell dumpsys battery reset
 adb shell input keyevent KEYCODE_WAKEUP
 shot 13-pantalla-bloqueo 3
+adb shell locksettings clear --old 1234 > /dev/null 2>&1
 adb shell wm dismiss-keyguard
+adb shell input keyevent 82
 sleep 1
 adb shell cmd statusbar expand-notifications
 shot 14-notificacion 3

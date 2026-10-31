@@ -17,10 +17,8 @@ import androidx.media3.session.SessionToken
 import com.google.common.util.concurrent.ListenableFuture
 import com.maty.rocola.data.LibraryIndex
 import com.maty.rocola.data.Song
-import com.maty.rocola.playback.ARG_COUNT
-import com.maty.rocola.playback.ARG_START
+import com.maty.rocola.playback.ARG_IDS
 import com.maty.rocola.playback.CMD_PLACE_NEXT
-import com.maty.rocola.playback.CMD_SHUFFLE_FROM_CURRENT
 import com.maty.rocola.playback.EXTRA_ALBUM_ID
 import com.maty.rocola.playback.PlaybackService
 import com.maty.rocola.playback.toMediaItem
@@ -264,10 +262,13 @@ class PlayerViewModel(private val app: Application) : AndroidViewModel(app) {
         val c = controller ?: return
         if (songs.isEmpty()) return
         contextLabel = label
-        if (shuffle != null) c.shuffleModeEnabled = shuffle
+        val wantShuffle = shuffle ?: c.shuffleModeEnabled
         val start = if (shuffle == true) songs.indices.random() else startIndex.coerceIn(0, songs.lastIndex)
+        // Se carga la lista sin aleatorio y recién después se activa: los comandos del reproductor
+        // llegan en orden, así el servicio arma el orden mezclado empezando por la canción elegida.
+        if (c.shuffleModeEnabled) c.shuffleModeEnabled = false
         c.setMediaItems(songs.map { it.toMediaItem() }, start, 0L)
-        if (c.shuffleModeEnabled) c.sendCustomCommand(SessionCommand(CMD_SHUFFLE_FROM_CURRENT, Bundle.EMPTY), Bundle.EMPTY)
+        if (wantShuffle) c.shuffleModeEnabled = true
         c.prepare()
         c.play()
         syncState(c)
@@ -373,13 +374,14 @@ class PlayerViewModel(private val app: Application) : AndroidViewModel(app) {
             play(songs, 0, shuffle = false)
             return
         }
-        val at = c.currentMediaItemIndex + 1
-        c.addMediaItems(at, songs.map { it.toMediaItem() })
         if (c.shuffleModeEnabled) {
+            // Con aleatorio, el servicio inserta y ubica las canciones justo después de la actual.
             c.sendCustomCommand(
                 SessionCommand(CMD_PLACE_NEXT, Bundle.EMPTY),
-                bundleOf(ARG_START to at, ARG_COUNT to songs.size),
+                bundleOf(ARG_IDS to songs.map { it.id }.toLongArray()),
             )
+        } else {
+            c.addMediaItems(c.currentMediaItemIndex + 1, songs.map { it.toMediaItem() })
         }
     }
 

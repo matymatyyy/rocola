@@ -13,8 +13,7 @@ const val EXTRA_DURATION = "rocola.duration"
 const val CMD_TOGGLE_FAVORITE = "rocola.TOGGLE_FAVORITE"
 const val CMD_SHUFFLE_FROM_CURRENT = "rocola.SHUFFLE_FROM_CURRENT"
 const val CMD_PLACE_NEXT = "rocola.PLACE_NEXT"
-const val ARG_START = "start"
-const val ARG_COUNT = "count"
+const val ARG_IDS = "ids"
 
 fun Song.toMediaItem(): MediaItem {
     val extras = Bundle().apply {

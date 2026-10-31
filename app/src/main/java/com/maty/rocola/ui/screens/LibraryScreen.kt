@@ -270,11 +270,7 @@ private fun AlbumsTab(app: AppController, albums: List<Album>, bottomPadding: Dp
 
 @Composable
 fun AlbumTile(album: Album, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    Column(
-        modifier
-            .clip(RoundedCornerShape(12.dp))
-            .clickable(onClick = onClick),
-    ) {
+    Column(modifier.clickable(onClick = onClick)) {
         ArtworkImage(
             artwork = album.artwork,
             seed = album.title,

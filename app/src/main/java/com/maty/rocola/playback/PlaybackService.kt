@@ -375,7 +375,16 @@ class PlaybackService : MediaSessionService() {
                     player.currentMediaItem?.mediaId?.toLongOrNull()?.let { rocola.userStore.toggleFavorite(it) }
                 }
                 CMD_SHUFFLE_FROM_CURRENT -> shuffleFromCurrent()
-                CMD_PLACE_NEXT -> placeNextInShuffle(args.getInt(ARG_START), args.getInt(ARG_COUNT))
+                CMD_PLACE_NEXT -> {
+                    val items = args.getLongArray(ARG_IDS)
+                        ?.mapNotNull { id -> rocola.repository.song(id)?.toMediaItem() }
+                        .orEmpty()
+                    if (items.isNotEmpty()) {
+                        val at = (player.currentMediaItemIndex + 1).coerceAtMost(player.mediaItemCount)
+                        player.addMediaItems(at, items)
+                        placeNextInShuffle(at, items.size)
+                    }
+                }
                 else -> return super.onCustomCommand(session, controller, customCommand, args)
             }
             return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
