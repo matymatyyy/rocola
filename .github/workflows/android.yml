@@ -46,14 +46,14 @@ jobs:
             ls -la "$APK"
           } 2>&1 | tee apk-info.txt
           mkdir -p dist
-          cp "$APK" dist/Rocola-1.0.apk
+          cp "$APK" dist/Rocola.apk
 
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: build-output
           path: |
-            dist/Rocola-1.0.apk
+            dist/Rocola.apk
             build.log
             apk-info.txt
           if-no-files-found: warn
@@ -94,7 +94,7 @@ jobs:
           heap-size: 576M
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -no-boot-anim -camera-back none -camera-front none
-          script: bash ci/emulator-test.sh dist/Rocola-1.0.apk fixtures ci-out
+          script: bash ci/emulator-test.sh dist/Rocola.apk fixtures ci-out
 
       - uses: actions/upload-artifact@v4
         if: always()
@@ -117,7 +117,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           mkdir -p assets
-          [ -f out/build-output/dist/Rocola-1.0.apk ] && cp out/build-output/dist/Rocola-1.0.apk assets/
+          [ -f out/build-output/dist/Rocola.apk ] && cp out/build-output/dist/Rocola.apk assets/
           [ -f out/build-output/build.log ] && cp out/build-output/build.log assets/
           [ -f out/build-output/apk-info.txt ] && cp out/build-output/apk-info.txt assets/
           if [ -d out/emulator-report ]; then

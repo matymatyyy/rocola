@@ -170,8 +170,11 @@ fun SettingsScreen(app: AppController, bottomPadding: Dp) {
             )
         }
         item {
+            val version = remember {
+                runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName }.getOrNull() ?: ""
+            }
             Text(
-                "Rocola 1.0",
+                "Rocola $version",
                 style = RocolaType.small,
                 color = Rocola.Ceniza,
                 modifier = Modifier.padding(horizontal = 20.dp, vertical = 28.dp),
