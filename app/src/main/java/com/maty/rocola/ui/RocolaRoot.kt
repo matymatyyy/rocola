@@ -4,6 +4,13 @@ package com.maty.rocola.ui
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.runtime.LaunchedEffect
+import com.maty.rocola.ui.screens.DeleteHost
+import com.maty.rocola.ui.screens.SelectionActionBar
+import com.maty.rocola.ui.screens.SelectionTopBar
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.core.tween
@@ -91,11 +98,17 @@ private fun RocolaContent(app: AppController, libraryVm: LibraryViewModel, playe
 
     val hasTrack = player.current != null
     val expanded = nav.playerExpanded && hasTrack
+    val selecting = app.selection.active
     val navBar = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
-    val bottomPadding = navBar + if (hasTrack) 92.dp else 16.dp
+    val bottomPadding = navBar + if (hasTrack || selecting) 92.dp else 16.dp
 
     BackHandler(enabled = expanded) { nav.playerExpanded = false }
     BackHandler(enabled = !expanded && nav.stack.size > 1) { nav.pop() }
+    // Registrado último para que el "atrás" primero cancele la selección.
+    BackHandler(enabled = selecting && !expanded) { app.selection.clear() }
+
+    // Cambiar de pantalla o abrir el reproductor cancela la selección.
+    LaunchedEffect(nav.top, expanded) { app.selection.clear() }
 
     SharedTransitionLayout(Modifier.fillMaxSize().background(Rocola.Vino)) {
         val holder = rememberSaveableStateHolder()
@@ -148,7 +161,7 @@ private fun RocolaContent(app: AppController, libraryVm: LibraryViewModel, playe
                     sharedScope = this@SharedTransitionLayout,
                     visibilityScope = this@AnimatedContent,
                 )
-            } else if (hasTrack) {
+            } else if (hasTrack || selecting) {
                 Box(Modifier.fillMaxSize()) {
                     // Funde la lista hacia el fondo detrás de la barra, así no se asoma por debajo.
                     Box(
@@ -164,18 +177,44 @@ private fun RocolaContent(app: AppController, libraryVm: LibraryViewModel, playe
                                 ),
                             ),
                     )
-                    MiniPlayer(
-                        state = player,
-                        palette = palette,
-                        position = playerVm.position,
-                        onExpand = { nav.playerExpanded = true },
-                        onTogglePlay = playerVm::togglePlayPause,
-                        onNext = playerVm::next,
-                        sharedScope = this@SharedTransitionLayout,
-                        visibilityScope = this@AnimatedContent,
-                        modifier = Modifier.align(Alignment.BottomCenter),
-                    )
+                    if (selecting) {
+                        SelectionActionBar(
+                            onPlay = app::playSelection,
+                            onQueue = app::queueSelection,
+                            onAddToPlaylist = app::addSelectionToPlaylist,
+                            onDelete = app::deleteSelection,
+                            modifier = Modifier.align(Alignment.BottomCenter),
+                        )
+                    } else {
+                        MiniPlayer(
+                            state = player,
+                            palette = palette,
+                            position = playerVm.position,
+                            onExpand = { nav.playerExpanded = true },
+                            onTogglePlay = playerVm::togglePlayPause,
+                            onNext = playerVm::next,
+                            sharedScope = this@SharedTransitionLayout,
+                            visibilityScope = this@AnimatedContent,
+                            modifier = Modifier.align(Alignment.BottomCenter),
+                        )
+                    }
                 }
+            }
+        }
+
+        Box(Modifier.fillMaxSize()) {
+            AnimatedVisibility(
+                visible = selecting && !expanded,
+                enter = slideInVertically(tween(200)) { -it } + fadeIn(tween(200)),
+                exit = slideOutVertically(tween(160)) { -it } + fadeOut(tween(160)),
+                modifier = Modifier.align(Alignment.TopCenter),
+            ) {
+                SelectionTopBar(
+                    count = app.selection.count,
+                    total = app.selection.source.size,
+                    onClose = app.selection::clear,
+                    onSelectAll = app.selection::selectAll,
+                )
             }
         }
     }
@@ -232,6 +271,7 @@ private fun Overlays(
             onToggleFavorite = { app.library.toggleFavorite(song.id) },
             onRemoveFromPlaylist = { request.playlistId?.let { app.library.removeFromPlaylist(it, song.id) } },
             onShare = { app.share(song) },
+            onDelete = { app.deleteSong(song) },
         )
     }
 
@@ -293,5 +333,7 @@ private fun Overlays(
     if (app.showSpeed) {
         SpeedSheet(current = player.speed, onPick = app.player::setSpeed, onDismiss = { app.showSpeed = false })
     }
+
+    DeleteHost(app)
 
 }

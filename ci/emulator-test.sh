@@ -237,6 +237,37 @@ echo "== Volver desde la notificación"
 adb shell am start -W -a com.maty.rocola.action.OPEN_PLAYER -n "$PKG/.MainActivity" > /dev/null
 shot 16-reproductor-otra-vez 2
 
+echo "== Elegir varias canciones y borrarlas"
+media_count() { adb shell content query --uri content://media/external/audio/media --projection _id 2>/dev/null | grep -c "Row:"; }
+back # minimiza el reproductor que abrió la notificación
+ensure_front
+tap "Canciones" > /dev/null
+BEFORE=$(media_count)
+XY=$(ui_find "Arena fría")
+if [ -n "$XY" ]; then
+  # shellcheck disable=SC2086
+  adb shell input swipe $XY $XY 900 # toque largo
+  sleep 1.5
+  tap "Bajamar" > /dev/null
+  shot 17-seleccion 1
+  if on_screen "2 seleccionadas"; then pass "Selección múltiple con toque largo (2 seleccionadas)"; else fail "No quedaron 2 canciones seleccionadas"; fi
+  if tap "Borrar"; then
+    sleep 2
+    shot 18-confirmar-borrado 1
+    tap "Allow" "Permitir" > /dev/null
+    sleep 5
+    AFTER=$(media_count)
+    if [ "$AFTER" -eq $((BEFORE - 2)) ]; then pass "Borró las 2 canciones elegidas ($BEFORE -> $AFTER en la biblioteca de Android)"; else fail "No se borraron las canciones ($BEFORE -> $AFTER)"; fi
+    if adb shell ls /sdcard/Music/Rocola | grep -qiE "Arena_fr|Bajamar"; then fail "Los archivos siguen en el teléfono"; else pass "Los archivos se borraron del almacenamiento"; fi
+    shot 19-despues-de-borrar 2
+    if is_playing; then pass "La música sigue después de borrar"; else fail "Se cortó la música al borrar ($(pb_state | cut -c1-60))"; fi
+  else
+    fail "No apareció la barra de acciones de la selección"
+  fi
+else
+  fail "No encontré la canción para seleccionar"
+fi
+
 echo "== Registros"
 adb shell dumpsys media_session > "$OUT/media_session.txt"
 adb shell dumpsys activity services "$PKG" > "$OUT/servicios.txt"

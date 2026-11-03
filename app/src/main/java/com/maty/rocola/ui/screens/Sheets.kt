@@ -100,7 +100,14 @@ private fun RocolaSheet(onDismiss: () -> Unit, skipPartial: Boolean = false, con
 }
 
 @Composable
-private fun SheetAction(icon: ImageVector, text: String, onClick: () -> Unit, tint: Color = Rocola.Arena, trailing: @Composable () -> Unit = {}) {
+private fun SheetAction(
+    icon: ImageVector,
+    text: String,
+    onClick: () -> Unit,
+    tint: Color = Rocola.Arena,
+    textColor: Color = Rocola.Marfil,
+    trailing: @Composable () -> Unit = {},
+) {
     Row(
         Modifier
             .fillMaxWidth()
@@ -111,7 +118,7 @@ private fun SheetAction(icon: ImageVector, text: String, onClick: () -> Unit, ti
     ) {
         Icon(icon, contentDescription = null, tint = tint)
         Spacer(Modifier.width(18.dp))
-        Text(text, style = RocolaType.itemTitle, color = Rocola.Marfil, modifier = Modifier.weight(1f))
+        Text(text, style = RocolaType.itemTitle, color = textColor, modifier = Modifier.weight(1f))
         trailing()
     }
 }
@@ -130,6 +137,7 @@ fun SongActionsSheet(
     onToggleFavorite: () -> Unit,
     onRemoveFromPlaylist: () -> Unit,
     onShare: () -> Unit,
+    onDelete: () -> Unit,
 ) {
     RocolaSheet(onDismiss) {
         Row(Modifier.padding(horizontal = 24.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -159,6 +167,7 @@ fun SongActionsSheet(
         SheetAction(Icons.Rounded.Album, "Ir al álbum", andClose(onGoToAlbum))
         SheetAction(Icons.Rounded.Person, "Ir al artista", andClose(onGoToArtist))
         SheetAction(Icons.Rounded.Share, "Compartir", andClose(onShare))
+        SheetAction(Icons.Rounded.Delete, "Borrar del teléfono", andClose(onDelete), tint = Rocola.Error, textColor = Rocola.Error)
     }
 }
 

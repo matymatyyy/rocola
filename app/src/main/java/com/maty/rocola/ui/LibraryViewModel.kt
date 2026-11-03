@@ -69,4 +69,10 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
     fun deletePlaylist(id: Long) = store.deletePlaylist(id)
     fun addToPlaylist(id: Long, songIds: List<Long>): Int = store.addToPlaylist(id, songIds)
     fun removeFromPlaylist(id: Long, songId: Long) = store.removeFromPlaylist(id, songId)
+
+    /** Después de borrar archivos: limpia favoritas y listas, y vuelve a leer la biblioteca. */
+    fun forgetSongs(songIds: Set<Long>) {
+        store.removeSongs(songIds)
+        repository.refresh()
+    }
 }

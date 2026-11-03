@@ -140,13 +140,7 @@ fun SearchScreen(app: AppController, player: PlayerUiState, bottomPadding: Dp) {
             if (results.songs.isNotEmpty()) {
                 item(key = "songs-title") { SectionTitle("Canciones") }
                 itemsIndexed(results.songs, key = { _, s -> "song-" + s.id }) { index, song ->
-                    SongRow(
-                        song = song,
-                        isCurrent = song.id == player.current?.songId,
-                        isPlaying = player.isPlaying,
-                        onClick = { app.play(results.songs, index, "Búsqueda: $query") },
-                        onMore = { app.songMenu = SongMenuRequest(song) },
-                    )
+                    SelectableSongRow(app, song, results.songs, index, player, "Búsqueda: $query")
                 }
             }
         }

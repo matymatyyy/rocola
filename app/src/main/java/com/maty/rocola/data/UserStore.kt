@@ -80,6 +80,15 @@ class UserStore(context: Context) {
         savePlaylists()
     }
 
+    /** Saca de favoritas y de las listas las canciones que se borraron del teléfono. */
+    fun removeSongs(songIds: Set<Long>) {
+        if (songIds.isEmpty()) return
+        _favorites.update { it - songIds }
+        prefs.edit().putString(KEY_FAVORITES, _favorites.value.joinToString(",")).apply()
+        _playlists.update { list -> list.map { p -> p.copy(songIds = p.songIds.filterNot { it in songIds }) } }
+        savePlaylists()
+    }
+
     private fun loadFavorites(): Set<Long> =
         prefs.getString(KEY_FAVORITES, null)
             ?.split(',')

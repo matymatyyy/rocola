@@ -1,6 +1,14 @@
 package com.maty.rocola.ui.components
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.material.icons.rounded.Check
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.StartOffset
 import androidx.compose.animation.core.animateFloat
@@ -58,6 +66,7 @@ sealed interface SongLeading {
     data class Number(val value: Int) : SongLeading
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun SongRow(
     song: Song,
@@ -68,11 +77,30 @@ fun SongRow(
     modifier: Modifier = Modifier,
     leading: SongLeading = SongLeading.Art,
     subtitle: String? = song.artist,
+    onLongClick: (() -> Unit)? = null,
+    selectionMode: Boolean = false,
+    selected: Boolean = false,
 ) {
+    val rowBackground by animateColorAsState(
+        if (selected) Rocola.VinoAlto else Color.Transparent,
+        tween(150),
+        label = "rowSelection",
+    )
     Row(
         modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .background(rowBackground)
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = onLongClick,
+                onLongClickLabel = if (onLongClick != null && !selectionMode) "Seleccionar" else null,
+            )
+            .semantics {
+                if (selectionMode) {
+                    this.selected = selected
+                    stateDescription = if (selected) "Seleccionada" else "Sin seleccionar"
+                }
+            }
             .heightIn(min = 68.dp)
             .padding(start = 20.dp, end = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -80,7 +108,15 @@ fun SongRow(
         when (leading) {
             SongLeading.Art -> Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) {
                 ArtworkImage(song.artwork, song.album, Modifier.size(48.dp), RoundedCornerShape(7.dp), letterSize = 20.sp)
-                if (isCurrent) {
+                if (selectionMode) {
+                    Box(
+                        Modifier
+                            .size(48.dp)
+                            .clip(RoundedCornerShape(7.dp))
+                            .background(Color.Black.copy(alpha = if (selected) 0.55f else 0.35f)),
+                    )
+                    SelectionMark(selected)
+                } else if (isCurrent) {
                     Box(
                         Modifier
                             .size(48.dp)
@@ -91,8 +127,11 @@ fun SongRow(
                 }
             }
             is SongLeading.Number -> Box(Modifier.width(30.dp), contentAlignment = Alignment.CenterStart) {
-                if (isCurrent) PlayingBars(isPlaying)
-                else Text(leading.value.toString(), style = RocolaType.numeral, color = Rocola.Ceniza)
+                when {
+                    selectionMode -> SelectionMark(selected)
+                    isCurrent -> PlayingBars(isPlaying)
+                    else -> Text(leading.value.toString(), style = RocolaType.numeral, color = Rocola.Ceniza)
+                }
             }
         }
         Spacer(Modifier.width(14.dp))
@@ -115,9 +154,35 @@ fun SongRow(
             color = Rocola.Ceniza,
             modifier = Modifier.padding(start = 12.dp),
         )
-        IconButton(onClick = onMore) {
-            Icon(Icons.Rounded.MoreVert, contentDescription = "Opciones de ${song.title}", tint = Rocola.Arena)
+        if (selectionMode) {
+            Spacer(Modifier.width(48.dp))
+        } else {
+            IconButton(onClick = onMore) {
+                Icon(Icons.Rounded.MoreVert, contentDescription = "Opciones de ${song.title}", tint = Rocola.Arena)
+            }
         }
+    }
+}
+
+/** Círculo de selección: lleno con tilde si está elegida, solo el borde si no. */
+@Composable
+fun SelectionMark(selected: Boolean, modifier: Modifier = Modifier) {
+    if (selected) {
+        Box(
+            modifier
+                .size(24.dp)
+                .clip(CircleShape)
+                .background(Rocola.Marfil),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(Icons.Rounded.Check, contentDescription = null, tint = Rocola.Vino, modifier = Modifier.size(17.dp))
+        }
+    } else {
+        Box(
+            modifier
+                .size(24.dp)
+                .border(2.dp, Rocola.Marfil.copy(alpha = 0.85f), CircleShape),
+        )
     }
 }
 

@@ -113,7 +113,11 @@ fun LibraryScreen(
                 Icon(Icons.Rounded.Tune, contentDescription = "Ajustes", tint = Rocola.Marfil)
             }
         }
-        TabStrip(selected = pager.currentPage, onSelect = { scope.launch { pager.animateScrollToPage(it) } })
+        TabStrip(
+            selected = pager.currentPage,
+            enabled = !app.selection.active,
+            onSelect = { scope.launch { pager.animateScrollToPage(it) } },
+        )
         when {
             library == null -> Box(Modifier.fillMaxSize())
             library.songs.isEmpty() && library.hiddenCount == 0 -> EmptyMessage(
@@ -122,7 +126,11 @@ fun LibraryScreen(
             ) {
                 PillButton("Buscar de nuevo", null, filled = true, onClick = { app.library.refresh() })
             }
-            else -> HorizontalPager(state = pager, modifier = Modifier.fillMaxSize()) { page ->
+            else -> HorizontalPager(
+                state = pager,
+                modifier = Modifier.fillMaxSize(),
+                userScrollEnabled = !app.selection.active,
+            ) { page ->
                 when (page) {
                     0 -> SongsTab(app, library, player, sort, bottomPadding)
                     1 -> AlbumsTab(app, library.albums, bottomPadding)
@@ -136,7 +144,7 @@ fun LibraryScreen(
 }
 
 @Composable
-private fun TabStrip(selected: Int, onSelect: (Int) -> Unit) {
+private fun TabStrip(selected: Int, enabled: Boolean, onSelect: (Int) -> Unit) {
     val listState = rememberLazyListState()
     LaunchedEffect(selected) { listState.animateScrollToItem((selected - 1).coerceAtLeast(0)) }
     LazyRow(
@@ -151,7 +159,7 @@ private fun TabStrip(selected: Int, onSelect: (Int) -> Unit) {
             Column(
                 Modifier
                     .clip(RoundedCornerShape(8.dp))
-                    .clickable(onClickLabel = "Ver $label") { onSelect(index) }
+                    .clickable(enabled = enabled, onClickLabel = "Ver $label") { onSelect(index) }
                     .padding(horizontal = 6.dp, vertical = 10.dp)
                     .width(IntrinsicSize.Max),
             ) {
@@ -213,13 +221,7 @@ private fun SongsTab(app: AppController, library: LibraryData, player: PlayerUiS
             }
         }
         itemsIndexed(songs, key = { _, song -> song.id }) { index, song ->
-            SongRow(
-                song = song,
-                isCurrent = song.id == player.current?.songId,
-                isPlaying = player.isPlaying,
-                onClick = { app.play(songs, index, "Toda tu música") },
-                onMore = { app.songMenu = SongMenuRequest(song) },
-            )
+            SelectableSongRow(app, song, songs, index, player, "Toda tu música")
         }
         if (library.hiddenCount > 0) {
             item(key = "hidden") {

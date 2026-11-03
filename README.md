@@ -13,6 +13,7 @@ Reproductor de música para Android hecho con Kotlin, Jetpack Compose y Media3. 
 - **Temporizador para dormir**, con el volumen bajando de a poco, o al terminar la canción actual.
 - **Ecualizador** con estilos del sistema y refuerzo de graves.
 - **Favoritas y listas** propias, guardadas en el teléfono.
+- **Selección múltiple**: mantené apretada una canción y tocá otras para reproducirlas, mandarlas a la cola o a una lista, o borrarlas del teléfono (Android pide confirmación).
 - **Atajo "Mezclar todo"**: mantené apretado el ícono de la app.
 
 ## Compilar

@@ -385,6 +385,14 @@ class PlayerViewModel(private val app: Application) : AndroidViewModel(app) {
         }
     }
 
+    /** Quita de la cola las canciones borradas (si suena una, pasa a la siguiente). */
+    fun removeSongsFromQueue(songIds: Set<Long>) {
+        val c = controller ?: return
+        for (i in c.mediaItemCount - 1 downTo 0) {
+            if (c.getMediaItemAt(i).mediaId.toLongOrNull() in songIds) c.removeMediaItem(i)
+        }
+    }
+
     fun addToQueue(songs: List<Song>) {
         val c = controller ?: return
         if (songs.isEmpty()) return

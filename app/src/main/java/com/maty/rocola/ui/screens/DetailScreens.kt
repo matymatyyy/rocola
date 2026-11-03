@@ -123,12 +123,13 @@ fun AlbumScreen(app: AppController, library: LibraryData, albumId: Long, player:
             )
         }
         itemsIndexed(album.songs, key = { _, s -> s.id }) { index, song ->
-            SongRow(
+            SelectableSongRow(
+                app = app,
                 song = song,
-                isCurrent = song.id == player.current?.songId,
-                isPlaying = player.isPlaying,
-                onClick = { app.play(album.songs, index, album.title) },
-                onMore = { app.songMenu = SongMenuRequest(song) },
+                list = album.songs,
+                index = index,
+                player = player,
+                label = album.title,
                 leading = SongLeading.Number(song.track.takeIf { it > 0 } ?: (index + 1)),
                 subtitle = song.artist.takeIf { !it.equals(album.artist, ignoreCase = true) },
             )
@@ -166,14 +167,7 @@ fun ArtistScreen(app: AppController, library: LibraryData, name: String, player:
             item(key = "songs-title") { SectionTitle("Canciones", Modifier.padding(top = 12.dp)) }
         }
         itemsIndexed(artist.songs, key = { _, s -> s.id }) { index, song ->
-            SongRow(
-                song = song,
-                isCurrent = song.id == player.current?.songId,
-                isPlaying = player.isPlaying,
-                onClick = { app.play(artist.songs, index, artist.name) },
-                onMore = { app.songMenu = SongMenuRequest(song) },
-                subtitle = song.album,
-            )
+            SelectableSongRow(app, song, artist.songs, index, player, artist.name, subtitle = song.album)
         }
     }
 }
@@ -302,13 +296,7 @@ private fun SongListScreen(
             }
         }
         itemsIndexed(songs, key = { i, s -> "${s.id}-$i" }) { index, song ->
-            SongRow(
-                song = song,
-                isCurrent = song.id == player.current?.songId,
-                isPlaying = player.isPlaying,
-                onClick = { app.play(songs, index, label) },
-                onMore = { app.songMenu = SongMenuRequest(song, playlistId) },
-            )
+            SelectableSongRow(app, song, songs, index, player, label, playlistId = playlistId)
         }
     }
 }
