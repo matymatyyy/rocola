@@ -254,7 +254,8 @@ if [ -n "$XY" ]; then
   if tap "Borrar"; then
     sleep 2
     shot 18-confirmar-borrado 1
-    tap "Allow" "Permitir" > /dev/null
+    # Botón ALLOW del cartel del sistema; si el volcado no lo encuentra, posición medida en la captura.
+    if ! tap "ALLOW" "Allow" "PERMITIR" "Permitir" > /dev/null; then adb shell input tap 794 1408; fi
     sleep 5
     AFTER=$(media_count)
     if [ "$AFTER" -eq $((BEFORE - 2)) ]; then pass "Borró las 2 canciones elegidas ($BEFORE -> $AFTER en la biblioteca de Android)"; else fail "No se borraron las canciones ($BEFORE -> $AFTER)"; fi
